@@ -94,17 +94,17 @@ public class MainActivity extends Activity {
     private void addHeader(LinearLayout page) {
         LinearLayout header = new LinearLayout(this);
         header.setGravity(Gravity.CENTER_VERTICAL);
-        pad(header, 20, 14, 20, 14);
+        pad(header, 22, 12, 20, 12);
         header.setBackgroundColor(Color.WHITE);
 
         ImageView logo = new ImageView(this);
         logo.setImageResource(R.drawable.rider_logo);
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        header.addView(logo, new LinearLayout.LayoutParams(dp(66), dp(52)));
+        header.addView(logo, new LinearLayout.LayoutParams(dp(54), dp(48)));
 
         LinearLayout brand = column();
-        pad(brand, 9, 0, 0, 0);
-        brand.addView(text("RIDER", 24, INK, true));
+        pad(brand, 12, 0, 0, 0);
+        brand.addView(text("RIDER", 23, INK, true));
         TextView sub = text("DRIVER PARTNER", 10, MUTED, true);
         sub.setLetterSpacing(0.16f);
         brand.addView(sub);
@@ -203,7 +203,7 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(PAGE);
 
         LinearLayout content = column();
-        pad(content, 18, 18, 18, 22);
+        pad(content, 18, 18, 18, 18);
 
         content.addView(text("Good day, Driver", 17, MUTED, false));
         gap(content, 4);
@@ -297,12 +297,12 @@ public class MainActivity extends Activity {
             showResult(false);
         });
 
-        ImageView bike = new ImageView(this);
-        bike.setImageResource(R.drawable.bike_footer);
-        bike.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        LinearLayout.LayoutParams bikeP = new LinearLayout.LayoutParams(-1, dp(118));
-        bikeP.topMargin = dp(8);
-        card.addView(bike, bikeP);
+        ImageView skyline = new ImageView(this);
+        skyline.setImageResource(R.drawable.city_footer);
+        skyline.setScaleType(ImageView.ScaleType.FIT_XY);
+        LinearLayout.LayoutParams skylineP = new LinearLayout.LayoutParams(-1, dp(76));
+        skylineP.topMargin = dp(12);
+        card.addView(skyline, skylineP);
 
         content.addView(card);
         gap(content, 15);
