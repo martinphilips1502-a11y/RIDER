@@ -1,7 +1,6 @@
 package com.scriptedmachi.rider;
 
 import android.app.Activity;
-import android.os.Build;
 import android.os.Bundle;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -11,204 +10,191 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Handler;
 import android.os.Looper;
-import android.widget.ImageView;
 import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
     private static final int GREEN = Color.rgb(0, 139, 61);
-    private static final int DARK_GREEN = Color.rgb(0, 112, 48);
-    private static final int INK = Color.rgb(20, 31, 27);
-    private static final int MUTED = Color.rgb(105, 119, 112);
-    private static final int PAGE = Color.rgb(249, 251, 249);
-    private static final int RED = Color.rgb(211, 48, 57);
-    private ValueAnimator acceptPulse;
-    private ToneGenerator toneGenerator;
-    private final Handler soundHandler = new Handler(Looper.getMainLooper());
+    private static final int DEEP_GREEN = Color.rgb(0, 105, 48);
+    private static final int INK = Color.rgb(19, 35, 29);
+    private static final int MUTED = Color.rgb(91, 107, 100);
+    private static final int PAGE = Color.rgb(247, 250, 248);
+    private static final int RED = Color.rgb(218, 42, 54);
+    private ValueAnimator pulse;
+    private ToneGenerator tones;
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
-    @Override
-    public void onCreate(Bundle state) {
+    @Override public void onCreate(Bundle state) {
         super.onCreate(state);
-        getWindow().setStatusBarColor(GREEN);
-        getWindow().setNavigationBarColor(Color.WHITE);
-        // White status-bar icons on green; dark navigation icons on white.
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        Window w = getWindow();
+        w.setStatusBarColor(GREEN);
+        w.setNavigationBarColor(Color.WHITE);
+        w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         showRequest();
     }
 
-    private int dp(float value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
+    private int dp(float v) {
+        return Math.round(v * getResources().getDisplayMetrics().density);
     }
 
-    private GradientDrawable shape(int color, int radius, int strokeColor, int strokeWidth) {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(color);
-        drawable.setCornerRadius(dp(radius));
-        if (strokeWidth > 0) drawable.setStroke(dp(strokeWidth), strokeColor);
-        return drawable;
+    private GradientDrawable shape(int fill, int radius, int stroke, int strokeDp) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(fill);
+        d.setCornerRadius(dp(radius));
+        if (strokeDp > 0) d.setStroke(dp(strokeDp), stroke);
+        return d;
     }
 
-    private TextView label(String value, int size, int color, boolean bold) {
-        TextView view = new TextView(this);
-        view.setText(value);
-        view.setTextSize(size);
-        view.setTextColor(color);
-        view.setIncludeFontPadding(true);
-        view.setGravity(Gravity.CENTER_VERTICAL);
-        view.setTypeface(Typeface.create("sans-serif", bold ? Typeface.BOLD : Typeface.NORMAL));
-        return view;
+    private TextView text(String value, int size, int color, boolean bold) {
+        TextView t = new TextView(this);
+        t.setText(value);
+        t.setTextSize(size);
+        t.setTextColor(color);
+        t.setGravity(Gravity.CENTER_VERTICAL);
+        t.setIncludeFontPadding(true);
+        t.setTypeface(Typeface.create("sans-serif", bold ? Typeface.BOLD : Typeface.NORMAL));
+        return t;
     }
 
     private LinearLayout column() {
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        return layout;
+        LinearLayout l = new LinearLayout(this);
+        l.setOrientation(LinearLayout.VERTICAL);
+        return l;
     }
 
-    private void padding(View view, int left, int top, int right, int bottom) {
-        view.setPadding(dp(left), dp(top), dp(right), dp(bottom));
+    private void pad(View v, int l, int t, int r, int b) {
+        v.setPadding(dp(l), dp(t), dp(r), dp(b));
     }
 
-    private void space(LinearLayout parent, int height) {
-        View spacer = new View(this);
-        parent.addView(spacer, new LinearLayout.LayoutParams(1, dp(height)));
+    private void gap(LinearLayout parent, int height) {
+        View v = new View(this);
+        parent.addView(v, new LinearLayout.LayoutParams(1, dp(height)));
     }
 
-    // Android 15 draws app content behind the status bar for apps targeting API 35.
-    // This green strip occupies that inset so the logo starts safely below phone icons.
-    private void addStatusBarStrip(LinearLayout page) {
-        if (Build.VERSION.SDK_INT >= 35) {
-            int resource = getResources().getIdentifier("status_bar_height", "dimen", "android");
-            int height = resource > 0 ? getResources().getDimensionPixelSize(resource) : dp(28);
-            View strip = new View(this);
-            strip.setBackgroundColor(GREEN);
-            page.addView(strip, new LinearLayout.LayoutParams(-1, height));
-        }
+    private void divider(LinearLayout parent, int top, int bottom) {
+        View v = new View(this);
+        v.setBackgroundColor(Color.rgb(226, 234, 229));
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, dp(1));
+        p.topMargin = dp(top);
+        p.bottomMargin = dp(bottom);
+        parent.addView(v, p);
     }
 
-    private LinearLayout createPage() {
+    private LinearLayout makePage() {
         LinearLayout page = column();
         page.setBackgroundColor(PAGE);
-        addStatusBarStrip(page);
         return page;
     }
 
-    private void addHeader(LinearLayout parent) {
+    private void addHeader(LinearLayout page) {
         LinearLayout header = new LinearLayout(this);
         header.setGravity(Gravity.CENTER_VERTICAL);
-        padding(header, 20, 15, 20, 15);
+        pad(header, 20, 14, 20, 14);
         header.setBackgroundColor(Color.WHITE);
 
-        TextView mark = label("R", 30, Color.rgb(184, 243, 107), true);
-        mark.setGravity(Gravity.CENTER);
-        mark.setBackground(shape(INK, 15, INK, 1));
-        header.addView(mark, new LinearLayout.LayoutParams(dp(52), dp(52)));
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(R.drawable.rider_logo);
+        logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        header.addView(logo, new LinearLayout.LayoutParams(dp(66), dp(52)));
 
         LinearLayout brand = column();
-        padding(brand, 12, 0, 0, 0);
-        brand.addView(label("RIDER", 25, INK, true));
-        brand.addView(label("DRIVER PARTNER", 11, MUTED, true));
+        pad(brand, 9, 0, 0, 0);
+        brand.addView(text("RIDER", 24, INK, true));
+        TextView sub = text("DRIVER PARTNER", 10, MUTED, true);
+        sub.setLetterSpacing(0.16f);
+        brand.addView(sub);
         header.addView(brand, new LinearLayout.LayoutParams(0, -2, 1));
 
-        TextView online = label("●  ONLINE", 13, DARK_GREEN, true);
+        TextView online = text("●  ONLINE", 12, DEEP_GREEN, true);
         online.setGravity(Gravity.CENTER);
-        online.setBackground(shape(Color.rgb(225, 249, 232), 30, Color.TRANSPARENT, 0));
-        padding(online, 15, 10, 15, 10);
+        online.setBackground(shape(Color.rgb(226, 248, 234), 30, Color.TRANSPARENT, 0));
+        pad(online, 14, 9, 14, 9);
         header.addView(online);
-        parent.addView(header);
 
-        View divider = new View(this);
-        divider.setBackgroundColor(Color.rgb(226, 234, 228));
-        parent.addView(divider, new LinearLayout.LayoutParams(-1, dp(1)));
+        page.addView(header);
+        divider(page, 0, 0);
     }
 
-    private TextView actionButton(String title, int textColor, int backgroundColor, int borderColor) {
-        TextView button = label(title, 18, textColor, true);
-        button.setGravity(Gravity.CENTER);
-        button.setBackground(shape(backgroundColor, 16, borderColor, 1));
-        button.setClickable(true);
-        button.setFocusable(true);
-        return button;
+    private TextView button(String title, int textColor, int fill, int border) {
+        TextView b = text(title, 17, textColor, true);
+        b.setGravity(Gravity.CENTER);
+        b.setBackground(shape(fill, 17, border, 1));
+        b.setClickable(true);
+        b.setFocusable(true);
+        return b;
     }
 
-    private void addLocation(LinearLayout card, int pinDrawable,
-                             String heading, String address, int headingColor) {
+    private void addLocation(LinearLayout card, int drawable, String heading,
+                             String address, int headingColor) {
         LinearLayout row = new LinearLayout(this);
-        row.setGravity(Gravity.TOP);
+        row.setGravity(Gravity.CENTER_VERTICAL);
 
         ImageView pin = new ImageView(this);
-        pin.setImageResource(pinDrawable);
+        pin.setImageResource(drawable);
         pin.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        row.addView(pin, new LinearLayout.LayoutParams(dp(42), dp(48)));
+        LinearLayout.LayoutParams pinP = new LinearLayout.LayoutParams(dp(34), dp(40));
+        pinP.rightMargin = dp(13);
+        row.addView(pin, pinP);
 
-        LinearLayout details = column();
-        padding(details, 12, 0, 0, 0);
-        details.addView(label(heading, 15, headingColor, true));
-        TextView addressView = label(address, 17, INK, true);
-        addressView.setLineSpacing(dp(2), 1.0f);
-        details.addView(addressView);
-        row.addView(details, new LinearLayout.LayoutParams(0, -2, 1));
+        LinearLayout labels = column();
+        labels.addView(text(heading, 14, headingColor, true));
+        TextView addressText = text(address, 16, INK, true);
+        addressText.setLineSpacing(dp(1), 1.0f);
+        labels.addView(addressText);
+        row.addView(labels, new LinearLayout.LayoutParams(0, -2, 1));
         card.addView(row);
     }
 
-    private void playRequestSound() {
-        playTone(ToneGenerator.TONE_PROP_BEEP2, 180, true);
-    }
-
-    private void playFeedbackSound(boolean accepted) {
-        playTone(accepted ? ToneGenerator.TONE_PROP_ACK : ToneGenerator.TONE_PROP_NACK, 220, false);
-    }
-
-    private void playTone(int tone, int durationMs, boolean doubleBeep) {
+    private void playTone(int tone, int duration, boolean doubleTone) {
         try {
-            if (toneGenerator != null) toneGenerator.release();
-            toneGenerator = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 75);
-            toneGenerator.startTone(tone, durationMs);
-            if (doubleBeep) {
-                soundHandler.postDelayed(() -> {
-                    if (toneGenerator != null) toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 140);
-                }, 230);
+            if (tones != null) tones.release();
+            tones = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 78);
+            tones.startTone(tone, duration);
+            if (doubleTone) {
+                handler.postDelayed(() -> {
+                    if (tones != null) tones.startTone(ToneGenerator.TONE_PROP_BEEP, 130);
+                }, 210);
             }
-            soundHandler.postDelayed(() -> {
-                if (toneGenerator != null) {
-                    toneGenerator.release();
-                    toneGenerator = null;
+            handler.postDelayed(() -> {
+                if (tones != null) {
+                    tones.release();
+                    tones = null;
                 }
-            }, doubleBeep ? 520 : 300);
-        } catch (Exception ignored) {
-            // Sound is an enhancement; the app remains fully usable if audio is unavailable.
-        }
+            }, doubleTone ? 500 : 300);
+        } catch (Exception ignored) { }
     }
 
-    private void startAcceptPulse(TextView button) {
-        if (acceptPulse != null) acceptPulse.cancel();
-        acceptPulse = ValueAnimator.ofFloat(0f, 1f);
-        acceptPulse.setDuration(850);
-        acceptPulse.setRepeatCount(ValueAnimator.INFINITE);
-        acceptPulse.setRepeatMode(ValueAnimator.REVERSE);
-        acceptPulse.addUpdateListener(animation -> {
-            float progress = (float) animation.getAnimatedValue();
-            GradientDrawable background = (GradientDrawable) button.getBackground();
-            int alpha = 105 + Math.round(145 * progress);
-            int width = 2 + Math.round(3 * progress);
-            background.setStroke(dp(width), Color.argb(alpha, 190, 255, 205));
-            button.setElevation(dp(3 + 3 * progress));
+    private void startPulse(TextView accept) {
+        stopPulse();
+        pulse = ValueAnimator.ofFloat(0f, 1f);
+        pulse.setDuration(620);
+        pulse.setRepeatCount(ValueAnimator.INFINITE);
+        pulse.setRepeatMode(ValueAnimator.REVERSE);
+        pulse.addUpdateListener(a -> {
+            float f = (float) a.getAnimatedValue();
+            GradientDrawable bg = (GradientDrawable) accept.getBackground();
+            int alpha = 125 + Math.round(130 * f);
+            int width = 2 + Math.round(3 * f);
+            bg.setStroke(dp(width), Color.argb(alpha, 190, 255, 207));
+            accept.setElevation(dp(3 + 5 * f));
         });
-        acceptPulse.start();
+        pulse.start();
     }
 
-    private void stopAcceptPulse() {
-        if (acceptPulse != null) {
-            acceptPulse.cancel();
-            acceptPulse = null;
+    private void stopPulse() {
+        if (pulse != null) {
+            pulse.cancel();
+            pulse = null;
         }
     }
 
     private void showRequest() {
-        LinearLayout page = createPage();
+        LinearLayout page = makePage();
         addHeader(page);
 
         ScrollView scroll = new ScrollView(this);
@@ -217,135 +203,163 @@ public class MainActivity extends Activity {
         scroll.setBackgroundColor(PAGE);
 
         LinearLayout content = column();
-        padding(content, 18, 20, 18, 28);
+        pad(content, 18, 18, 18, 22);
 
-        content.addView(label("Good day, Driver", 17, MUTED, false));
-        space(content, 4);
-        TextView title = label("You have a new ride", 29, INK, true);
-        content.addView(title);
-        space(content, 18);
+        content.addView(text("Good day, Driver", 17, MUTED, false));
+        gap(content, 4);
+        content.addView(text("You have a new ride", 27, INK, true));
+        gap(content, 16);
 
         LinearLayout card = column();
-        card.setBackground(shape(Color.WHITE, 24, Color.rgb(231, 237, 232), 1));
-        padding(card, 18, 18, 18, 18);
+        card.setBackground(shape(Color.WHITE, 24, Color.rgb(224, 233, 227), 1));
+        pad(card, 17, 17, 17, 17);
 
-        TextView requestTag = label("♧  NEW RIDE REQUEST", 14, DARK_GREEN, true);
-        requestTag.setBackground(shape(Color.rgb(226, 249, 233), 30, Color.TRANSPARENT, 0));
-        padding(requestTag, 14, 10, 14, 10);
-        card.addView(requestTag, new LinearLayout.LayoutParams(-2, -2));
-        space(card, 20);
+        TextView tag = text("♧  NEW RIDE REQUEST", 13, DEEP_GREEN, true);
+        tag.setBackground(shape(Color.rgb(226, 248, 234), 28, Color.TRANSPARENT, 0));
+        pad(tag, 13, 9, 13, 9);
+        card.addView(tag, new LinearLayout.LayoutParams(-2, -2));
+        gap(card, 17);
 
         LinearLayout passenger = new LinearLayout(this);
         passenger.setGravity(Gravity.CENTER_VERTICAL);
+
         ImageView avatar = new ImageView(this);
         avatar.setImageResource(R.drawable.passenger_avatar);
-        avatar.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        passenger.addView(avatar, new LinearLayout.LayoutParams(dp(72), dp(72)));
+        avatar.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        passenger.addView(avatar, new LinearLayout.LayoutParams(dp(76), dp(76)));
 
         LinearLayout passengerInfo = column();
-        padding(passengerInfo, 14, 0, 0, 0);
-        passengerInfo.addView(label("Rishi", 25, INK, true));
-        passengerInfo.addView(label("PASSENGER", 12, MUTED, true));
+        pad(passengerInfo, 13, 0, 0, 0);
+        passengerInfo.addView(text("Rishi", 24, INK, true));
+        passengerInfo.addView(text("PASSENGER", 11, MUTED, true));
+        TextView rating = text("★  4.8  (126 rides)", 13, MUTED, false);
+        rating.setTextColor(Color.rgb(87, 101, 94));
+        passengerInfo.addView(rating);
         passenger.addView(passengerInfo, new LinearLayout.LayoutParams(0, -2, 1));
         card.addView(passenger);
 
-        View separator = new View(this);
-        separator.setBackgroundColor(Color.rgb(232, 237, 233));
-        LinearLayout.LayoutParams separatorParams = new LinearLayout.LayoutParams(-1, dp(1));
-        separatorParams.topMargin = dp(18);
-        separatorParams.bottomMargin = dp(18);
-        card.addView(separator, separatorParams);
+        divider(card, 17, 17);
 
-        addLocation(card, R.drawable.pickup_pin, "Pickup", "Bhagavathi Nagar, Koyambedu", DARK_GREEN);
-        View routeLine = new View(this);
-        routeLine.setBackgroundColor(Color.rgb(193, 207, 197));
-        LinearLayout.LayoutParams routeParams = new LinearLayout.LayoutParams(dp(2), dp(24));
-        routeParams.leftMargin = dp(20);
-        card.addView(routeLine, routeParams);
-        addLocation(card, R.drawable.destination_pin, "Destination", "Bharathiyar Street, Valasaravakkam", RED);
+        addLocation(card, R.drawable.pickup_pin, "Pickup",
+                "Bhagavathi Nagar, Koyambedu", DEEP_GREEN);
 
-        // Ride amount row: clearly displays the passenger's offered fare.
-        LinearLayout fareRow = new LinearLayout(this);
-        fareRow.setGravity(Gravity.CENTER_VERTICAL);
-        fareRow.setBackground(shape(Color.rgb(242, 249, 244), 14, Color.rgb(218, 235, 222), 1));
-        padding(fareRow, 16, 13, 16, 13);
-        LinearLayout fareLabels = column();
-        fareLabels.addView(label("RIDE AMOUNT", 12, MUTED, true));
-        fareLabels.addView(label("Passenger fare", 13, MUTED, false));
-        fareRow.addView(fareLabels, new LinearLayout.LayoutParams(0, -2, 1));
-        TextView fareAmount = label("₹125", 25, DARK_GREEN, true);
-        fareAmount.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);
-        fareRow.addView(fareAmount);
-        LinearLayout.LayoutParams fareParams = new LinearLayout.LayoutParams(-1, -2);
-        fareParams.topMargin = dp(20);
-        card.addView(fareRow, fareParams);
+        View route = new View(this);
+        route.setBackgroundColor(Color.rgb(194, 208, 199));
+        LinearLayout.LayoutParams routeP = new LinearLayout.LayoutParams(dp(2), dp(22));
+        routeP.leftMargin = dp(17);
+        card.addView(route, routeP);
 
-        space(card, 20);
-        TextView accept = actionButton("✓   ACCEPT RIDE", Color.WHITE, GREEN, GREEN);
-        accept.setBackground(shape(GREEN, 16, Color.argb(170, 190, 255, 205), 2));
+        addLocation(card, R.drawable.destination_pin, "Destination",
+                "Bharathiyar Street, Valasaravakkam", RED);
+
+        divider(card, 16, 16);
+
+        LinearLayout fare = new LinearLayout(this);
+        fare.setGravity(Gravity.CENTER_VERTICAL);
+        fare.setBackground(shape(Color.rgb(239, 249, 242), 16, Color.rgb(219, 237, 224), 1));
+        pad(fare, 15, 12, 15, 12);
+
+        ImageView wallet = new ImageView(this);
+        wallet.setImageResource(R.drawable.wallet_icon);
+        wallet.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams walletP = new LinearLayout.LayoutParams(dp(31), dp(31));
+        walletP.rightMargin = dp(12);
+        fare.addView(wallet, walletP);
+
+        LinearLayout fareText = column();
+        fareText.addView(text("Ride Amount", 14, INK, true));
+        fareText.addView(text("Passenger fare", 12, MUTED, false));
+        fare.addView(fareText, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView amount = text("₹125", 27, DEEP_GREEN, true);
+        amount.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);
+        fare.addView(amount);
+        LinearLayout.LayoutParams fareP = new LinearLayout.LayoutParams(-1, -2);
+        fareP.topMargin = dp(17);
+        card.addView(fare, fareP);
+
+        gap(card, 19);
+        TextView accept = button("✓   ACCEPT RIDE", Color.WHITE, GREEN, GREEN);
+        accept.setBackground(shape(GREEN, 17, Color.rgb(190, 255, 207), 3));
         card.addView(accept, new LinearLayout.LayoutParams(-1, dp(62)));
-        accept.setOnClickListener(view -> { stopAcceptPulse(); playFeedbackSound(true); showResult(true); });
+        accept.setOnClickListener(v -> {
+            stopPulse();
+            playTone(ToneGenerator.TONE_PROP_ACK, 230, false);
+            showResult(true);
+        });
 
-        space(card, 12);
-        TextView cancel = actionButton("×   CANCEL", RED, Color.rgb(255, 245, 245), Color.rgb(255, 205, 208));
-        card.addView(cancel, new LinearLayout.LayoutParams(-1, dp(58)));
-        cancel.setOnClickListener(view -> { stopAcceptPulse(); playFeedbackSound(false); showResult(false); });
+        gap(card, 11);
+        TextView cancel = button("×   CANCEL", RED, Color.rgb(255, 246, 247),
+                Color.rgb(255, 202, 207));
+        card.addView(cancel, new LinearLayout.LayoutParams(-1, dp(57)));
+        cancel.setOnClickListener(v -> {
+            stopPulse();
+            playTone(ToneGenerator.TONE_PROP_NACK, 220, false);
+            showResult(false);
+        });
+
+        ImageView bike = new ImageView(this);
+        bike.setImageResource(R.drawable.bike_footer);
+        bike.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams bikeP = new LinearLayout.LayoutParams(-1, dp(118));
+        bikeP.topMargin = dp(8);
+        card.addView(bike, bikeP);
 
         content.addView(card);
-        space(content, 18);
-        TextView footer = label("Please review the trip details before responding.", 13, MUTED, false);
+        gap(content, 15);
+        TextView footer = text("ⓘ  Please review the trip details before responding.", 13, MUTED, false);
         footer.setGravity(Gravity.CENTER);
         content.addView(footer);
 
         scroll.addView(content);
         page.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(page);
-        startAcceptPulse(accept);
-        playRequestSound();
+        startPulse(accept);
+        playTone(ToneGenerator.TONE_PROP_BEEP2, 170, true);
     }
 
     private void showResult(boolean accepted) {
-        LinearLayout page = createPage();
+        stopPulse();
+        LinearLayout page = makePage();
         addHeader(page);
 
         LinearLayout body = column();
         body.setGravity(Gravity.CENTER);
-        padding(body, 28, 30, 28, 30);
+        pad(body, 28, 28, 28, 28);
         body.setBackgroundColor(PAGE);
 
-        TextView mark = label(accepted ? "✓" : "×", 54, Color.WHITE, true);
-        mark.setGravity(Gravity.CENTER);
-        mark.setBackground(shape(accepted ? GREEN : RED, 100, Color.TRANSPARENT, 0));
-        body.addView(mark, new LinearLayout.LayoutParams(dp(112), dp(112)));
-        space(body, 28);
+        TextView icon = text(accepted ? "✓" : "×", 52, Color.WHITE, true);
+        icon.setGravity(Gravity.CENTER);
+        icon.setBackground(shape(accepted ? GREEN : RED, 100, Color.TRANSPARENT, 0));
+        body.addView(icon, new LinearLayout.LayoutParams(dp(104), dp(104)));
+        gap(body, 24);
 
-        TextView title = label(accepted ? "RIDE ACCEPTED!" : "RIDE CANCELLED", 27,
-                accepted ? DARK_GREEN : RED, true);
-        title.setGravity(Gravity.CENTER);
-        body.addView(title);
-        space(body, 12);
+        TextView heading = text(accepted ? "RIDE ACCEPTED!" : "RIDE CANCELLED",
+                25, accepted ? DEEP_GREEN : RED, true);
+        heading.setGravity(Gravity.CENTER);
+        body.addView(heading);
+        gap(body, 10);
 
-        TextView message = label(accepted
+        TextView message = text(accepted
                 ? "You have successfully accepted Rishi's ride."
-                : "Rishi's ride request has been cancelled.", 17, MUTED, false);
+                : "Rishi's ride request has been cancelled.", 16, MUTED, false);
         message.setGravity(Gravity.CENTER);
         body.addView(message);
-        space(body, 32);
+        gap(body, 28);
 
-        TextView back = actionButton("←   BACK TO REQUEST", Color.WHITE, GREEN, GREEN);
-        body.addView(back, new LinearLayout.LayoutParams(-1, dp(60)));
-        back.setOnClickListener(view -> showRequest());
+        TextView back = button("←   BACK TO REQUEST", Color.WHITE, GREEN, GREEN);
+        body.addView(back, new LinearLayout.LayoutParams(-1, dp(58)));
+        back.setOnClickListener(v -> showRequest());
 
         page.addView(body, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(page);
     }
-    @Override
-    protected void onDestroy() {
-        stopAcceptPulse();
-        soundHandler.removeCallbacksAndMessages(null);
-        if (toneGenerator != null) {
-            toneGenerator.release();
-            toneGenerator = null;
+
+    @Override protected void onDestroy() {
+        stopPulse();
+        handler.removeCallbacksAndMessages(null);
+        if (tones != null) {
+            tones.release();
+            tones = null;
         }
         super.onDestroy();
     }
