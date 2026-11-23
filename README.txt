@@ -1,12 +1,15 @@
-RIDER Android app - source project
+RIDER UI FINAL UPDATE - FARE ₹125
 
-This is a simple, offline, one-screen Android app. It shows Rishi's ride request and has working Accept and Cancel buttons. Accept shows a Ride Accepted confirmation; Cancel shows a cancellation confirmation. The Back button returns to the request.
+Files in this ZIP:
+1. MainActivity.java
+2. styles.xml
 
-To build the APK:
-1. Install Android Studio (current stable version) on a computer.
-2. Open this RIDER folder in Android Studio.
-3. Allow Gradle sync and install Android SDK Platform 35 if prompted.
-4. Choose Build > Build Bundle(s) / APK(s) > Build APK(s).
-5. The APK will be at app/build/outputs/apk/debug/app-debug.apk.
+Replace in your existing Android project:
+- MainActivity.java -> app/src/main/java/com/scriptedmachi/rider/MainActivity.java
+- styles.xml -> app/src/main/res/values/styles.xml
 
-No internet permission, login, backend, or real ride dispatch is included. This is a local demo/prototype only.
+Then commit the two replaced files to your GitHub repository.
+Go to Actions > Build RIDER APK > open the latest successful run > Artifacts > RIDER-APK.
+Download and extract the artifact ZIP, then install app-debug.apk on your phone.
+
+Keep your existing build.gradle, settings.gradle, gradle.properties, AndroidManifest.xml and GitHub workflow unchanged.
