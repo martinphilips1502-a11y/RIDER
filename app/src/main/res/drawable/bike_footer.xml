@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp" android:height="126dp" android:viewportWidth="360" android:viewportHeight="126">
+    <path android:fillColor="#EEF6F0" android:pathData="M0,102 L0,91 L12,91 L12,78 L22,78 L22,91 L30,91 L30,68 L43,68 L43,91 L54,91 L54,57 L68,57 L68,91 L79,91 L79,74 L93,74 L93,91 L106,91 L106,49 L120,49 L120,91 L133,91 L133,64 L145,64 L145,91 L158,91 L158,38 L174,38 L174,91 L188,91 L188,70 L202,70 L202,91 L218,91 L218,60 L232,60 L232,91 L247,91 L247,76 L260,76 L260,91 L276,91 L276,82 L291,82 L291,102Z"/>
+    <path android:fillColor="#D9EEDC" android:pathData="M0,108 Q15,84 30,106 Q44,78 60,106 Q77,85 92,106 Q108,77 125,106 Q141,83 158,106 Q176,80 192,106 Q209,85 226,106 Q245,78 262,106 Q280,84 297,106 Q318,83 337,106 L360,106 L360,119 L0,119Z"/>
+    <path android:fillColor="#BFE6C7" android:pathData="M0,111 Q12,93 25,111 Q36,90 49,111 Q62,96 75,111 Q89,90 103,111 Q117,96 130,111 Q146,90 159,111 Q174,94 187,111 Q203,91 217,111 Q231,96 245,111 Q260,90 275,111 Q291,95 306,111 Q323,89 340,111 L360,111 L360,119 L0,119Z"/>
+    <!-- Rear and front wheels -->
+    <path android:fillColor="#172923" android:pathData="M202,101A20,20 0,1 0,242 101A20,20 0,1 0,202 101 M292,101A20,20 0,1 0,332 101A20,20 0,1 0,292 101Z"/>
+    <path android:fillColor="#DCE5E0" android:pathData="M208,101A14,14 0,1 0,236 101A14,14 0,1 0,208 101 M298,101A14,14 0,1 0,326 101A14,14 0,1 0,298 101Z"/>
+    <path android:fillColor="#87968E" android:pathData="M220,88 L220,114 L224,114 L224,88Z M310,88 L310,114 L314,114 L314,88Z"/>
+    <!-- Motorcycle frame and body -->
+    <path android:fillColor="#1D3029" android:pathData="M218,88 L238,78 L267,80 L289,89 L309,88 L315,94 L288,96 L270,89 L248,94 L235,91Z"/>
+    <path android:fillColor="#087A3B" android:pathData="M238,78 L252,70 L276,72 L288,84 L267,86 L248,84Z"/>
+    <path android:fillColor="#263B34" android:pathData="M258,70 L274,65 L287,70 L293,78 L277,81 L266,78Z"/>
+    <path android:fillColor="#9BAAA2" android:pathData="M285,79 L299,80 L308,88 L300,91 L287,87Z"/>
+    <path android:fillColor="#1C2925" android:pathData="M234,77 L245,65 L249,66 L244,82Z M304,84 L316,76 L318,78 L311,91Z"/>
+    <!-- Rider torso, arm, legs -->
+    <path android:fillColor="#243A33" android:pathData="M257,41 Q267,34 277,43 L286,63 L277,73 L260,68 L251,55Z"/>
+    <path android:fillColor="#24536B" android:pathData="M267,60 L281,63 L290,84 L281,88 L269,76 L253,78 L248,71Z"/>
+    <path android:fillColor="#172923" android:pathData="M258,67 L270,70 L260,88 L249,91 L245,87Z"/>
+    <path android:fillColor="#E7AD87" android:pathData="M256,45 L264,48 L276,65 L271,68 L257,57 L250,52Z"/>
+    <path android:fillColor="#E7AD87" android:pathData="M274,48 L281,52 L294,66 L290,70 L276,60 L268,55Z"/>
+    <!-- Helmet -->
+    <path android:fillColor="#202B27" android:pathData="M253,29 Q256,16 270,17 Q283,18 285,31 L280,41 L259,40Z"/>
+    <path android:fillColor="#AFC7BC" android:pathData="M276,29 L285,31 L281,36 L272,35Z"/>
+    <path android:fillColor="#D6E6DC" android:pathData="M258,22 Q266,17 275,23 L278,29 L259,30Z"/>
+    <!-- Ground -->
+    <path android:fillColor="#A7CBB0" android:pathData="M0,120 L360,120 L360,123 L0,123Z"/>
+</vector>
