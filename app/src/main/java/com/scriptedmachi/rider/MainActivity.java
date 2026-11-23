@@ -6,6 +6,12 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.animation.ValueAnimator;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.ImageView;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -19,6 +25,9 @@ public class MainActivity extends Activity {
     private static final int MUTED = Color.rgb(105, 119, 112);
     private static final int PAGE = Color.rgb(249, 251, 249);
     private static final int RED = Color.rgb(211, 48, 57);
+    private ValueAnimator acceptPulse;
+    private ToneGenerator toneGenerator;
+    private final Handler soundHandler = new Handler(Looper.getMainLooper());
 
     @Override
     public void onCreate(Bundle state) {
@@ -125,13 +134,14 @@ public class MainActivity extends Activity {
         return button;
     }
 
-    private void addLocation(LinearLayout card, String symbol, int symbolColor,
+    private void addLocation(LinearLayout card, int pinDrawable,
                              String heading, String address, int headingColor) {
         LinearLayout row = new LinearLayout(this);
         row.setGravity(Gravity.TOP);
 
-        TextView pin = label(symbol, 25, symbolColor, true);
-        pin.setGravity(Gravity.CENTER);
+        ImageView pin = new ImageView(this);
+        pin.setImageResource(pinDrawable);
+        pin.setScaleType(ImageView.ScaleType.FIT_CENTER);
         row.addView(pin, new LinearLayout.LayoutParams(dp(42), dp(48)));
 
         LinearLayout details = column();
@@ -142,6 +152,59 @@ public class MainActivity extends Activity {
         details.addView(addressView);
         row.addView(details, new LinearLayout.LayoutParams(0, -2, 1));
         card.addView(row);
+    }
+
+    private void playRequestSound() {
+        playTone(ToneGenerator.TONE_PROP_BEEP2, 180, true);
+    }
+
+    private void playFeedbackSound(boolean accepted) {
+        playTone(accepted ? ToneGenerator.TONE_PROP_ACK : ToneGenerator.TONE_PROP_NACK, 220, false);
+    }
+
+    private void playTone(int tone, int durationMs, boolean doubleBeep) {
+        try {
+            if (toneGenerator != null) toneGenerator.release();
+            toneGenerator = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 75);
+            toneGenerator.startTone(tone, durationMs);
+            if (doubleBeep) {
+                soundHandler.postDelayed(() -> {
+                    if (toneGenerator != null) toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 140);
+                }, 230);
+            }
+            soundHandler.postDelayed(() -> {
+                if (toneGenerator != null) {
+                    toneGenerator.release();
+                    toneGenerator = null;
+                }
+            }, doubleBeep ? 520 : 300);
+        } catch (Exception ignored) {
+            // Sound is an enhancement; the app remains fully usable if audio is unavailable.
+        }
+    }
+
+    private void startAcceptPulse(TextView button) {
+        if (acceptPulse != null) acceptPulse.cancel();
+        acceptPulse = ValueAnimator.ofFloat(0f, 1f);
+        acceptPulse.setDuration(850);
+        acceptPulse.setRepeatCount(ValueAnimator.INFINITE);
+        acceptPulse.setRepeatMode(ValueAnimator.REVERSE);
+        acceptPulse.addUpdateListener(animation -> {
+            float progress = (float) animation.getAnimatedValue();
+            GradientDrawable background = (GradientDrawable) button.getBackground();
+            int alpha = 105 + Math.round(145 * progress);
+            int width = 2 + Math.round(3 * progress);
+            background.setStroke(dp(width), Color.argb(alpha, 190, 255, 205));
+            button.setElevation(dp(3 + 3 * progress));
+        });
+        acceptPulse.start();
+    }
+
+    private void stopAcceptPulse() {
+        if (acceptPulse != null) {
+            acceptPulse.cancel();
+            acceptPulse = null;
+        }
     }
 
     private void showRequest() {
@@ -174,10 +237,10 @@ public class MainActivity extends Activity {
 
         LinearLayout passenger = new LinearLayout(this);
         passenger.setGravity(Gravity.CENTER_VERTICAL);
-        TextView avatar = label("R", 27, Color.WHITE, true);
-        avatar.setGravity(Gravity.CENTER);
-        avatar.setBackground(shape(Color.rgb(65, 91, 75), 50, Color.TRANSPARENT, 0));
-        passenger.addView(avatar, new LinearLayout.LayoutParams(dp(62), dp(62)));
+        ImageView avatar = new ImageView(this);
+        avatar.setImageResource(R.drawable.passenger_avatar);
+        avatar.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        passenger.addView(avatar, new LinearLayout.LayoutParams(dp(72), dp(72)));
 
         LinearLayout passengerInfo = column();
         padding(passengerInfo, 14, 0, 0, 0);
@@ -193,13 +256,13 @@ public class MainActivity extends Activity {
         separatorParams.bottomMargin = dp(18);
         card.addView(separator, separatorParams);
 
-        addLocation(card, "●", GREEN, "Pickup", "Bhagavathi Nagar, Koyambedu", DARK_GREEN);
+        addLocation(card, R.drawable.pickup_pin, "Pickup", "Bhagavathi Nagar, Koyambedu", DARK_GREEN);
         View routeLine = new View(this);
         routeLine.setBackgroundColor(Color.rgb(193, 207, 197));
         LinearLayout.LayoutParams routeParams = new LinearLayout.LayoutParams(dp(2), dp(24));
         routeParams.leftMargin = dp(20);
         card.addView(routeLine, routeParams);
-        addLocation(card, "●", RED, "Destination", "Bharathiyar Street, Valasaravakkam", RED);
+        addLocation(card, R.drawable.destination_pin, "Destination", "Bharathiyar Street, Valasaravakkam", RED);
 
         // Ride amount row: clearly displays the passenger's offered fare.
         LinearLayout fareRow = new LinearLayout(this);
@@ -219,13 +282,14 @@ public class MainActivity extends Activity {
 
         space(card, 20);
         TextView accept = actionButton("✓   ACCEPT RIDE", Color.WHITE, GREEN, GREEN);
+        accept.setBackground(shape(GREEN, 16, Color.argb(170, 190, 255, 205), 2));
         card.addView(accept, new LinearLayout.LayoutParams(-1, dp(62)));
-        accept.setOnClickListener(view -> showResult(true));
+        accept.setOnClickListener(view -> { stopAcceptPulse(); playFeedbackSound(true); showResult(true); });
 
         space(card, 12);
         TextView cancel = actionButton("×   CANCEL", RED, Color.rgb(255, 245, 245), Color.rgb(255, 205, 208));
         card.addView(cancel, new LinearLayout.LayoutParams(-1, dp(58)));
-        cancel.setOnClickListener(view -> showResult(false));
+        cancel.setOnClickListener(view -> { stopAcceptPulse(); playFeedbackSound(false); showResult(false); });
 
         content.addView(card);
         space(content, 18);
@@ -236,6 +300,8 @@ public class MainActivity extends Activity {
         scroll.addView(content);
         page.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(page);
+        startAcceptPulse(accept);
+        playRequestSound();
     }
 
     private void showResult(boolean accepted) {
@@ -272,5 +338,15 @@ public class MainActivity extends Activity {
 
         page.addView(body, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(page);
+    }
+    @Override
+    protected void onDestroy() {
+        stopAcceptPulse();
+        soundHandler.removeCallbacksAndMessages(null);
+        if (toneGenerator != null) {
+            toneGenerator.release();
+            toneGenerator = null;
+        }
+        super.onDestroy();
     }
 }
